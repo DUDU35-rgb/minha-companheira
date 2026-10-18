@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Companheira Virtual IA</title>
+<style>
+:root{
+  --bg:#0f0b17; --panel:#1b1430; --panel2:#241a3d; --accent:#ff5e9c;
+  --accent2:#8b5cf6; --text:#f3eefb; --muted:#a99fc4; --ok:#34d399; --err:#f87171;
+  --radius:16px; --shadow:0 8px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:radial-gradient(1200px 600px at 70% -10%,#2a1a4a,#0f0b17 60%);
+  color:var(--text)}
+#app{display:flex;flex-direction:column;min-height:100vh;max-width:900px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;position:sticky;top:0;z-index:5;
+  background:rgba(15,11,23,.8);backdrop-filter:blur(10px)}
+.brand{font-weight:700;font-size:18px}
+.brand small{color:var(--accent);font-weight:700}
+.logo{color:var(--accent)}
+.char-name{color:var(--muted);font-size:14px}
+.cap-banner{margin:10px 16px;padding:10px 14px;border-radius:12px;
+  background:#3a2a10;border:1px solid #7a5a1a;color:#f7d98a;font-size:13px}
+.hidden{display:none}
+.content{flex:1;padding:12px 16px 90px}
+.tab{display:none;animation:fade .25s ease}
+.tab.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+h2{margin:8px 0 14px;font-size:20px}
+h3{margin:0 0 8px}
+.muted{color:var(--muted);font-size:14px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.inp{width:100%;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.1);
+  background:#120d20;color:var(--text);font-size:15px;outline:none}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical}
+.row{display:flex;gap:10px;margin-top:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:none;border-radius:12px;padding:11px 16px;font-size:15px;font-weight:600;
+  cursor:pointer;background:#2e2347;color:var(--text);transition:.15s}
+.btn:hover{filter:brightness(1.12)}
+.btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+.btn.danger{background:#3a1620;color:#ffb4c4}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.photo-box{position:relative;width:100%;aspect-ratio:3/4;max-height:340px;
+  border-radius:14px;overflow:hidden;background:#120d20;display:flex;
+  align-items:center;justify-content:center}
+.photo-box img{width:100%;height:100%;object-fit:cover;display:none}
+.photo-empty{color:var(--muted)}
+.consent{display:flex;gap:8px;font-size:13px;color:var(--muted);margin-top:12px;align-items:flex-start}
+.consent input{margin-top:2px}
+/* chat */
+.chat-log{display:flex;flex-direction:column;gap:10px;min-height:52vh;
+  max-height:62vh;overflow-y:auto;padding:6px 2px 10px}
+.bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.4;
+  white-space:pre-wrap;word-wrap:break-word}
+.bubble.user{align-self:flex-end;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  color:#fff;border-bottom-right-radius:4px}
+.bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid rgba(255,255,255,.07);
+  border-bottom-left-radius:4px}
+.bubble video{width:100%;border-radius:12px;margin-top:8px}
+.bubble audio{width:100%;margin-top:8px}
+.bubble .status{font-size:12px;color:var(--muted);margin-top:6px}
+.chat-bar{display:flex;gap:8px;align-items:center;position:sticky;bottom:0;
+  padding:10px 0;background:linear-gradient(180deg,transparent,var(--bg) 30%)}
+.chat-bar .inp{flex:1}
+.mode{max-width:140px;padding:11px 8px;border-radius:12px;background:#120d20;
+  color:var(--text);border:1px solid rgba(255,255,255,.1)}
+.icon-btn{border:none;background:#2e2347;color:#fff;width:44px;height:44px;
+  border-radius:50%;font-size:18px;cursor:pointer}
+.icon-btn.rec{background:var(--err);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.5}}
+/* gallery */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gcard{background:var(--panel2);border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.07)}
+.gcard video{width:100%;display:block;background:#000}
+.gcard .meta{padding:8px 10px;font-size:12px;color:var(--muted)}
+.gcard .pending{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:10px;font-size:13px;color:var(--muted)}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-right:6px}
+.badge.ok{background:#12351f;color:var(--ok)}
+.badge.err{background:#3a1620;color:var(--err)}
+.badge.run{background:#2a2540;color:#c4b5fd}
+.badge.warn{background:#3a2a10;color:#f7d98a}
+/* tabbar */
+.tabbar{position:fixed;bottom:0;left:0;right:0;max-width:900px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(6,1fr);background:rgba(20,14,35,.95);
+  backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.07)}
+.tabbar button{border:none;background:none;color:var(--muted);padding:8px 2px;
+  font-size:18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabbar button span{font-size:10px}
+.tabbar button.active{color:var(--accent)}
+.cap-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.cap-row:last-child{border-bottom:none}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}.tabbar button span{font-size:9px}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand"><span class="logo">❤</span> Minha Companheira Virtual <small>IA</small></div>
+    <div id="charName" class="char-name"></div>
+  </header>
+
+  <div id="capBanner" class="cap-banner hidden"></div>
+
+  <main class="content">
+    <!-- MINHA PERSONAGEM -->
+    <section id="tab-character" class="tab active">
+      <h2>Minha Personagem</h2>
+      <div class="card">
+        <div class="photo-box">
+          <img id="refPhoto" alt="Foto de referencia" />
+          <div id="photoEmpty" class="photo-empty">Nenhuma foto enviada</div>
+        </div>
+        <label class="consent">
+          <input type="checkbox" id="consentChk">
+          Confirmo que a personagem e ficticia ou que tenho autorização da pessoa retratada.
+        </label>
+        <div class="row">
+          <input type="file" id="photoInput" accept="image/*" hidden>
+          <button class="btn" id="pickPhoto">Enviar / Atualizar foto</button>
+        </div>
+      </div>
+      <div class="card">
+        <label>Nome</label>
+        <input id="fName" class="inp" placeholder="Ex.: Sofia">
+        <label>Personalidade</label>
+        <textarea id="fPers" class="inp" rows="2"></textarea>
+        <label>Estilo de voz</label>
+        <select id="fVoice" class="inp">
+          <option value="shimmer">Feminina suave (shimmer)</option>
+          <option value="nova">Feminina jovem (nova)</option>
+          <option value="coral">Feminina calorosa (coral)</option>
+          <option value="alloy">Neutra (alloy)</option>
+        </select>
+        <label>Maneira de falar</label>
+        <textarea id="fStyle" class="inp" rows="2"></textarea>
+        <button class="btn primary" id="saveChar">Salvar personagem</button>
+      </div>
+    </section>
+
+    <!-- CONVERSAR -->
+    <section id="tab-chat" class="tab">
+      <h2>Conversar</h2>
+      <div id="chatLog" class="chat-log"></div>
+      <div class="chat-bar">
+        <select id="chatMode" class="mode">
+          <option value="text">Texto</option>
+          <option value="audio">Texto + áudio</option>
+          <option value="video">Resposta em vídeo</option>
+        </select>
+        <button id="micBtn" class="icon-btn" title="Gravar áudio">🎙</button>
+        <input id="chatInput" class="inp" placeholder="Escreva uma mensagem...">
+        <button id="sendBtn" class="btn primary">Enviar</button>
+      </div>
+    </section>
+
+    <!-- RESPONDER EM VIDEO -->
+    <section id="tab-videoreply" class="tab">
+      <h2>Responder em Vídeo</h2>
+      <p class="muted">Envie uma mensagem e receba a resposta falada, com sincronia labial.</p>
+      <div id="vrLog" class="chat-log"></div>
+      <div class="chat-bar">
+        <input id="vrInput" class="inp" placeholder="Ex.: Amor, você gosta de ir à praia?">
+        <button id="vrSend" class="btn primary">Perguntar</button>
+      </div>
+    </section>
+
+    <!-- CRIAR CENA -->
+    <section id="tab-scene" class="tab">
+      <h2>Criar Cena</h2>
+      <div class="card">
+        <label>Comando rápido (linguagem natural)</label>
+        <textarea id="quickCmd" class="inp" rows="2" placeholder="Ex.: Faça ela caminhar na areia da praia e sorrir para a câmera."></textarea>
+        <button class="btn primary" id="quickGen">Gerar cena pelo comando</button>
+      </div>
+      <div class="card">
+        <div class="grid2">
+          <div><label>Ação</label><input id="sAction" class="inp"></div>
+          <div><label>Cenário</label><input id="sScenario" class="inp"></div>
+          <div><label>Roupa</label><input id="sOutfit" class="inp"></div>
+          <div><label>Expressão/emoção</label><input id="sExpr" class="inp"></div>
+          <div><label>Movimento do corpo</label><input id="sBody" class="inp"></div>
+          <div><label>Câmera</label>
+            <select id="sCam" class="inp">
+              <option value="selfie">Selfie</option>
+              <option value="frontal">Câmera frontal</option>
+              <option value="corpo_inteiro">Corpo inteiro</option>
+            </select></div>
+          <div><label>Duração (s)</label><input id="sDur" class="inp" type="number" value="8" min="3" max="60"></div>
+          <div><label>Texto para falar</label><input id="sSpoken" class="inp"></div>
+        </div>
+        <button class="btn primary" id="sceneGen">Gerar cena detalhada</button>
+      </div>
+      <div id="sceneResult"></div>
+    </section>
+
+    <!-- GALERIA -->
+    <section id="tab-gallery" class="tab">
+      <h2>Galeria</h2>
+      <div id="galleryGrid" class="gallery"></div>
+    </section>
+
+    <!-- CONFIGURACOES -->
+    <section id="tab-settings" class="tab">
+      <h2>Configurações</h2>
+      <div class="card" id="capList"></div>
+      <div class="card">
+        <h3>Privacidade</h3>
+        <p class="muted">Os vídeos gerados por IA devem ser identificados como tal. Você pode apagar sua foto, conversas e vídeos a qualquer momento.</p>
+        <button class="btn danger" id="wipeChat">Apagar conversas</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-tab="character" class="active">👤<span>Personagem</span></button>
+    <button data-tab="chat">💬<span>Conversar</span></button>
+    <button data-tab="videoreply">🎥<span>Vídeo</span></button>
+    <button data-tab="scene">✨<span>Criar Cena</span></button>
+    <button data-tab="gallery">🖼<span>Galeria</span></button>
+    <button data-tab="settings">⚙<span>Ajustes</span></button>
+  </nav>
+</div>
+<script>
+// Minha Companheira Virtual IA - frontend
+const API = '';
+let TOKEN = localStorage.getItem('token') || '';
+let caps = {};
+
+function headers(json = true) {
+  const h = {};
+  if (json) h['Content-Type'] = 'application/json';
+  if (TOKEN) h['Authorization'] = 'Bearer ' + TOKEN;
+  return h;
+}
+async function api(path, opts = {}) {
+  const r = await fetch(API + path, opts);
+  const ct = r.headers.get('content-type') || '';
+  const body = ct.includes('json') ? await r.json() : await r.text();
+  if (!r.ok) throw new Error((body && body.detail) || r.statusText);
+  return body;
+}
+const $ = (id) => document.getElementById(id);
+const mediaUrl = (name) => name ? ('/media/' + name) : '';
+
+// ---- navegacao de abas ----
+document.querySelectorAll('.tabbar button').forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll('.tabbar button').forEach((x) => x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach((x) => x.classList.remove('active'));
+    b.classList.add('active');
+    $('tab-' + b.dataset.tab).classList.add('active');
+    if (b.dataset.tab === 'gallery') loadGallery();
+  };
+});
+
+// ---- capacidades ----
+async function loadCaps() {
+  caps = await api('/api/system/capabilities');
+  const off = [];
+  const map = { chat: caps.chat, tts: caps.tts, video: caps.video, lipsync: caps.lipsync, image: caps.image };
+  let html = '';
+  Object.values(map).forEach((c) => {
+    const ok = c.configured;
+    html += `<div class="cap-row"><span>${c.label}</span>` +
+      `<span class="badge ${ok ? 'ok' : 'err'}">${ok ? 'Conectado' : 'Precisa conectar'}</span></div>`;
+    if (!ok) off.push(c.label);
+  });
+  $('capList').innerHTML = '<h3>Funções de IA</h3>' + html;
+  const banner = $('capBanner');
+  if (off.length) {
+    banner.classList.remove('hidden');
+    banner.innerHTML = '⚠️ Funcoes ainda nao conectadas: <b>' + off.join(', ') +
+      '</b>. Configure as chaves no arquivo <code>.env</code> do servidor.';
+  } else banner.classList.add('hidden');
+}
+
+// ---- personagem ----
+let character = null;
+async function loadCharacter() {
+  character = await api('/api/character', { headers: headers() });
+  $('charName').textContent = character.name || '';
+  $('fName').value = character.name || '';
+  $('fPers').value = character.personality || '';
+  $('fStyle').value = character.speaking_style || '';
+  $('fVoice').value = character.voice || 'shimmer';
+  $('consentChk').checked = !!character.consent_confirmed;
+  const img = $('refPhoto');
+  if (character.reference_image) {
+    img.src = mediaUrl(character.reference_image);
+    img.style.display = 'block';
+    $('photoEmpty').style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    $('photoEmpty').style.display = 'block';
+  }
+}
+$('pickPhoto').onclick = () => {
+  if (!$('consentChk').checked) { alert('Marque a confirmação de autorização antes de enviar a foto.'); return; }
+  $('photoInput').click();
+};
+$('photoInput').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('consent', $('consentChk').checked);
+  const h = TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {};
+  try {
+    await api('/api/character/photo', { method: 'POST', body: fd, headers: h });
+    await loadCharacter();
+    alert('Foto atualizada!');
+  } catch (err) { alert(err.message); }
+};
+$('saveChar').onclick = async () => {
+  const payload = {
+    name: $('fName').value, personality: $('fPers').value,
+    speaking_style: $('fStyle').value, voice: $('fVoice').value,
+    consent_confirmed: $('consentChk').checked,
+  };
+  character = await api('/api/character', { method: 'PUT', headers: headers(), body: JSON.stringify(payload) });
+  $('charName').textContent = character.name;
+  alert('Personagem salva!');
+};
+
+// chat, video-reply, cenas, galeria, polling
+const jobTimers = {};
+
+function bubble(container, role, text) {
+  const d = document.createElement('div');
+  d.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
+  d.textContent = text || '';
+  container.appendChild(d);
+  container.scrollTop = container.scrollHeight;
+  return d;
+}
+function addAudio(bubbleEl, name) {
+  if (!name) return;
+  const a = document.createElement('audio');
+  a.controls = true; a.src = mediaUrl(name);
+  bubbleEl.appendChild(a);
+}
+function addVideo(bubbleEl, name) {
+  const v = document.createElement('video');
+  v.controls = true; v.src = mediaUrl(name); v.playsInline = true;
+  bubbleEl.appendChild(v);
+}
+
+// Acompanha um job de video dentro de um balao ja existente.
+function trackJob(jobId, bubbleEl) {
+  const st = document.createElement('div');
+  st.className = 'status';
+  st.innerHTML = '<span class="badge run">Gerando vídeo...</span>';
+  bubbleEl.appendChild(st);
+  clearInterval(jobTimers[jobId]);
+  jobTimers[jobId] = setInterval(async () => {
+    try {
+      const j = await api('/api/scene/job/' + jobId, { headers: headers() });
+      if (j.status === 'done') {
+        clearInterval(jobTimers[jobId]);
+        st.remove();
+        addVideo(bubbleEl, j.output_path);
+      } else if (j.status === 'not_configured') {
+        clearInterval(jobTimers[jobId]);
+        st.innerHTML = '<span class="badge warn">Precisa conectar</span> ' + (j.error || '');
+      } else if (j.status === 'error') {
+        clearInterval(jobTimers[jobId]);
+        st.innerHTML = '<span class="badge err">Erro</span> ' + (j.error || '');
+      }
+    } catch (e) { /* continua tentando */ }
+  }, 3000);
+}
+
+// ---- Conversar ----
+async function loadChat() {
+  const log = $('chatLog');
+  log.innerHTML = '';
+  const msgs = await api('/api/chat/history', { headers: headers() });
+  msgs.forEach((m) => {
+    const b = bubble(log, m.role, m.text);
+    if (m.audio_path) addAudio(b, m.audio_path);
+    if (m.video_id) trackJob(m.video_id, b);
+  });
+}
+async function sendChat() {
+  const inp = $('chatInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  const mode = $('chatMode').value;
+  bubble($('chatLog'), 'user', text);
+  inp.value = '';
+  const thinking = bubble($('chatLog'), 'bot', '...');
+  try {
+    const res = await api('/api/chat/send', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ text, mode }),
+    });
+    thinking.textContent = res.reply.text;
+    if (res.reply.audio_path) addAudio(thinking, res.reply.audio_path);
+    if (res.reply.video_id) trackJob(res.reply.video_id, thinking);
+  } catch (e) {
+    thinking.innerHTML = '<span class="badge err">Erro</span> ' + e.message;
+  }
+}
+$('sendBtn').onclick = sendChat;
+$('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
+
+// ---- gravacao de audio ----
+let mediaRec = null, chunks = [];
+$('micBtn').onclick = async () => {
+  const btn = $('micBtn');
+  if (mediaRec && mediaRec.state === 'recording') { mediaRec.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRec = new MediaRecorder(stream);
+    chunks = [];
+    mediaRec.ondataavailable = (e) => chunks.push(e.data);
+    mediaRec.onstop = async () => {
+      btn.classList.remove('rec');
+      stream.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const fd = new FormData();
+      fd.append('file', blob, 'audio.webm');
+      const h = TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {};
+      try {
+        const res = await api('/api/chat/audio', { method: 'POST', body: fd, headers: h });
+        const b = bubble($('chatLog'), 'user', '🎙 Áudio enviado');
+        addAudio(b, res.message.audio_path);
+        bubble($('chatLog'), 'bot', res.note);
+      } catch (e) { alert(e.message); }
+    };
+    mediaRec.start();
+    btn.classList.add('rec');
+  } catch (e) { alert('Microfone indisponível: ' + e.message); }
+};
+
+// ---- Responder em Video ----
+async function sendVideoReply() {
+  const inp = $('vrInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  bubble($('vrLog'), 'user', text);
+  inp.value = '';
+  const b = bubble($('vrLog'), 'bot', '...');
+  try {
+    const res = await api('/api/chat/send', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ text, mode: 'video' }),
+    });
+    b.textContent = res.reply.text;
+    if (res.reply.video_id) trackJob(res.reply.video_id, b);
+  } catch (e) { b.innerHTML = '<span class="badge err">Erro</span> ' + e.message; }
+}
+$('vrSend').onclick = sendVideoReply;
+$('vrInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendVideoReply(); });
+
+// ---- Criar Cena ----
+$('quickGen').onclick = async () => {
+  const command = $('quickCmd').value.trim();
+  if (!command) return;
+  const res = $('sceneResult');
+  const b = document.createElement('div'); b.className = 'bubble bot';
+  b.textContent = 'Comando: ' + command;
+  res.prepend(b);
+  try {
+    const j = await api('/api/scene/command', {
+      method: 'POST', headers: headers(), body: JSON.stringify({ command }),
+    });
+    trackJob(j.id, b);
+    $('quickCmd').value = '';
+  } catch (e) { b.innerHTML += '<div class="status"><span class="badge err">Erro</span> ' + e.message + '</div>'; }
+};
+$('sceneGen').onclick = async () => {
+  const payload = {
+    action: $('sAction').value, scenario: $('sScenario').value,
+    outfit: $('sOutfit').value, expression: $('sExpr').value,
+    body: $('sBody').value, camera: $('sCam').value,
+    duration: parseInt($('sDur').value || '8', 10), spoken_text: $('sSpoken').value,
+  };
+  const res = $('sceneResult');
+  const b = document.createElement('div'); b.className = 'bubble bot';
+  b.textContent = 'Cena: ' + (payload.action || payload.scenario || 'personalizada');
+  res.prepend(b);
+  try {
+    const j = await api('/api/scene/create', {
+      method: 'POST', headers: headers(), body: JSON.stringify(payload),
+    });
+    trackJob(j.id, b);
+  } catch (e) { b.innerHTML += '<div class="status"><span class="badge err">Erro</span> ' + e.message + '</div>'; }
+};
+
+// ---- Galeria ----
+async function loadGallery() {
+  const grid = $('galleryGrid');
+  grid.innerHTML = '';
+  const items = await api('/api/gallery', { headers: headers() });
+  if (!items.length) { grid.innerHTML = '<p class="muted">Nenhum vídeo gerado ainda.</p>'; return; }
+  items.forEach((j) => {
+    const c = document.createElement('div'); c.className = 'gcard';
+    if (j.status === 'done' && j.output_path) {
+      c.innerHTML = `<video controls src="${mediaUrl(j.output_path)}"></video>`;
+    } else {
+      const label = j.status === 'not_configured' ? 'Precisa conectar o serviço de vídeo'
+        : j.status === 'error' ? ('Erro: ' + (j.error || '')) : 'Gerando...';
+      c.innerHTML = `<div class="pending">${label}</div>`;
+    }
+    c.innerHTML += `<div class="meta">${(j.prompt || '').slice(0, 70)}...` +
+      `<br><button class="btn danger" style="margin-top:6px;padding:5px 10px;font-size:12px" data-del="${j.id}">Excluir</button></div>`;
+    grid.appendChild(c);
+  });
+  grid.querySelectorAll('[data-del]').forEach((btn) => {
+    btn.onclick = async () => {
+      if (!confirm('Excluir este vídeo?')) return;
+      await api('/api/gallery/' + btn.dataset.del, { method: 'DELETE', headers: headers() });
+      loadGallery();
+    };
+  });
+}
+$('wipeChat').onclick = async () => {
+  if (!confirm('Apagar todas as conversas?')) return;
+  await api('/api/chat/history', { method: 'DELETE', headers: headers() });
+  loadChat();
+};
+
+// ---- init ----
+(async function init() {
+  try {
+    await loadCaps();
+    await loadCharacter();
+    await loadChat();
+  } catch (e) { console.error(e); }
+})();
+
+</script>
+</body>
+</html>
