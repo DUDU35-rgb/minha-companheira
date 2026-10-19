@@ -356,8 +356,7 @@ document.querySelectorAll('.tabbar button').forEach((b) => {
   } else banner.classList.add('hidden');
 }
 
-// ---- personagem ----
-let character = null;
+// ---- personagem ----nlet character = null;
 async function loadCharacter() {
   character = await api('/api/character', { headers: headers() });
   $('charName').textContent = character.name || '';
@@ -407,6 +406,7 @@ $('saveChar').onclick = async () => {
 // chat, video-reply, cenas, galeria, polling
 const jobTimers = {};
 
+// Versão simples de bubble para compatibilidade
 function bubble(container, role, text) {
   const d = document.createElement('div');
   d.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
@@ -477,19 +477,11 @@ async function sendChat() {
       body: JSON.stringify({ text, mode }),
     });
     thinking.textContent = res.reply.text;
-    const repoLink = document.createElement('a');
-    repoLink.href = 'https://github.com/DUDU35-rgb/minha-companheira?utm_source=chatgpt.com';
-    repoLink.target = '_blank';
-    repoLink.rel = 'noopener noreferrer';
-    repoLink.textContent = 'https://github.com/DUDU35-rgb/minha-companheira?utm_source=chatgpt.com';
-    repoLink.style.display = 'block';
-    repoLink.style.marginTop = '8px';
-    repoLink.style.color = '#8ec5ff';
-    repoLink.style.wordBreak = 'break-all';
-    thinking.appendChild(repoLink);
+
     if (mode === 'audio') {
       falarResposta(res.reply.text);
     }
+
     if (res.reply.audio_path) addAudio(thinking, res.reply.audio_path);
     if (res.reply.video_id) trackJob(res.reply.video_id, thinking);
   } catch (e) {
@@ -583,8 +575,7 @@ $('sceneGen').onclick = async () => {
   } catch (e) { b.innerHTML += '<div class="status"><span class="badge err">Erro</span> ' + e.message + '</div>'; }
 };
 
-// ---- Galeria ----
-async function loadGallery() {
+// ---- Galeria ----nasync function loadGallery() {
   const grid = $('galleryGrid');
   grid.innerHTML = '';
   const items = await api('/api/gallery', { headers: headers() });
