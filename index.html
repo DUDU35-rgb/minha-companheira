@@ -254,6 +254,29 @@ async function api(path, opts = {}) {
 const $ = (id) => document.getElementById(id);
 const mediaUrl = (name) => name ? ('/media/' + name) : '';
 
+function falarResposta(texto) {
+  if (!('speechSynthesis' in window)) {
+    alert('A voz não está disponível neste navegador.');
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const fala = new SpeechSynthesisUtterance(texto);
+  fala.lang = 'pt-BR';
+  fala.rate = 1;
+  fala.pitch = 1.05;
+
+  const vozes = window.speechSynthesis.getVoices();
+  const vozPortugues = vozes.find(v => v.lang.toLowerCase().startsWith('pt'));
+
+  if (vozPortugues) {
+    fala.voice = vozPortugues;
+  }
+
+  window.speechSynthesis.speak(fala);
+}
+
 // ---- navegacao de abas ----
 document.querySelectorAll('.tabbar button').forEach((b) => {
   b.onclick = () => {
@@ -409,6 +432,7 @@ async function sendChat() {
     thinking.textContent = res.reply.text;
     if (res.reply.audio_path) addAudio(thinking, res.reply.audio_path);
     if (res.reply.video_id) trackJob(res.reply.video_id, thinking);
+    if (res.reply.text) falarResposta(res.reply.text);
   } catch (e) {
     thinking.innerHTML = '<span class="badge err">Erro</span> ' + e.message;
   }
@@ -460,6 +484,7 @@ async function sendVideoReply() {
     });
     b.textContent = res.reply.text;
     if (res.reply.video_id) trackJob(res.reply.video_id, b);
+    if (res.reply.text) falarResposta(res.reply.text);
   } catch (e) { b.innerHTML = '<span class="badge err">Erro</span> ' + e.message; }
 }
 $('vrSend').onclick = sendVideoReply;
