@@ -277,6 +277,54 @@ function falarResposta(texto) {
   window.speechSynthesis.speak(fala);
 }
 
+// Versão melhorada da função `bubble` (inserida antes da implementação existente)
+// - container: nó DOM onde o balão será anexado
+// - role: 'user' ou outro (tratado como 'bot')
+// - text: texto a exibir
+// - opts: { html: boolean, timestamp: boolean, audio: string, video: string }
+// Obs: opts.html permite inserir HTML somente quando o conteúdo for confiável (evita XSS).
+function bubble(container, role, text, opts = {}) {
+  const d = document.createElement('div');
+  d.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
+
+  if (opts.html) {
+    // ATENÇÃO: usar innerHTML apenas para conteúdo confiável.
+    d.innerHTML = text || '';
+  } else {
+    // safe insertion for untrusted content
+    d.textContent = text || '';
+  }
+
+  // anexar áudio se informado
+  if (opts.audio) {
+    const a = document.createElement('audio');
+    a.controls = true;
+    a.src = opts.audio;
+    d.appendChild(a);
+  }
+
+  // anexar vídeo se informado
+  if (opts.video) {
+    const v = document.createElement('video');
+    v.controls = true;
+    v.src = opts.video;
+    v.playsInline = true;
+    d.appendChild(v);
+  }
+
+  // área de status / timestamp opcional
+  if (opts.timestamp !== false) {
+    const st = document.createElement('div');
+    st.className = 'status';
+    st.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    d.appendChild(st);
+  }
+
+  container.appendChild(d);
+  container.scrollTop = container.scrollHeight;
+  return d;
+}
+
 // ---- navegacao de abas ----
 document.querySelectorAll('.tabbar button').forEach((b) => {
   b.onclick = () => {
@@ -288,8 +336,7 @@ document.querySelectorAll('.tabbar button').forEach((b) => {
   };
 });
 
-// ---- capacidades ----
-async function loadCaps() {
+// ---- capacidades ----nasync function loadCaps() {
   caps = await api('/api/system/capabilities');
   const off = [];
   const map = { chat: caps.chat, tts: caps.tts, video: caps.video, lipsync: caps.lipsync, image: caps.image };
@@ -440,8 +487,7 @@ async function sendChat() {
 $('sendBtn').onclick = sendChat;
 $('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 
-// ---- gravacao de audio ----
-let mediaRec = null, chunks = [];
+// ---- gravacao de audio ----nlet mediaRec = null, chunks = [];
 $('micBtn').onclick = async () => {
   const btn = $('micBtn');
   if (mediaRec && mediaRec.state === 'recording') { mediaRec.stop(); return; }
@@ -525,8 +571,7 @@ $('sceneGen').onclick = async () => {
   } catch (e) { b.innerHTML += '<div class="status"><span class="badge err">Erro</span> ' + e.message + '</div>'; }
 };
 
-// ---- Galeria ----
-async function loadGallery() {
+// ---- Galeria ----nasync function loadGallery() {
   const grid = $('galleryGrid');
   grid.innerHTML = '';
   const items = await api('/api/gallery', { headers: headers() });
