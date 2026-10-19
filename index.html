@@ -487,9 +487,11 @@ async function sendChat() {
     repoLink.style.color = '#8ec5ff';
     repoLink.style.wordBreak = 'break-all';
     thinking.appendChild(repoLink);
+    if (mode === 'audio') {
+      falarResposta(res.reply.text);
+    }
     if (res.reply.audio_path) addAudio(thinking, res.reply.audio_path);
     if (res.reply.video_id) trackJob(res.reply.video_id, thinking);
-    if (mode === 'audio' && res.reply.text) falarResposta(res.reply.text);
   } catch (e) {
     thinking.innerHTML = '<span class="badge err">Erro</span> ' + e.message;
   }
