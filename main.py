@@ -562,11 +562,44 @@ async def chat_send(data: ChatIn, background: BackgroundTasks, char=Depends(get_
 
 @api.post("/chat/audio")
 async def chat_audio(file: UploadFile = File(...), char=Depends(get_char), db=Depends(get_db)):
-    name = save_bytes(await file.read(), "webm")
-    m = Message(character_id=char.id, role="user", text="[audio enviado]", audio_path=name)
-    db.add(m); db.commit(); db.refresh(m)
-    return {"ok": True, "message": msg_out(m),
-            "note": "Conecte um provedor de transcricao para converter o audio em texto."}
+    import httpx
+
+    audio_data = await file.read()
+    if not audio_data:
+        raise HTTPException(400, "O arquivo de áudio está vazio.")
+
+    headers = {"Authorization": f"Bearer {S.LLM_API_KEY}"}
+    files = {
+        "file": (file.filename or "audio.webm", audio_data, file.content_type or "audio/webm")
+    }
+    data = {"model": "whisper-large-v3-turbo"}
+
+    try:
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(
+                "https://api.groq.com/openai/v1/audio/transcriptions",
+                headers=headers,
+                files=files,
+                data=data,
+            )
+        response.raise_for_status()
+        transcript = response.json().get("text", "").strip()
+    except Exception:
+        raise HTTPException(502, "Não foi possível transcrever o áudio. Tente novamente.")
+
+    if not transcript:
+        raise HTTPException(400, "Não consegui reconhecer a fala.")
+
+    m = Message(character_id=char.id, role="user", text=transcript)
+    db.add(m)
+    db.commit()
+    db.refresh(m)
+
+    return {
+        "ok": True,
+        "message": msg_out(m),
+        "note": "Áudio transcrito: " + transcript
+    }
 
 
 def _check_limit(db, char):
