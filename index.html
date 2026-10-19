@@ -336,7 +336,8 @@ document.querySelectorAll('.tabbar button').forEach((b) => {
   };
 });
 
-// ---- capacidades ----nasync function loadCaps() {
+// ---- capacidades ----
+async function loadCaps() {
   caps = await api('/api/system/capabilities');
   const off = [];
   const map = { chat: caps.chat, tts: caps.tts, video: caps.video, lipsync: caps.lipsync, image: caps.image };
@@ -356,7 +357,8 @@ document.querySelectorAll('.tabbar button').forEach((b) => {
   } else banner.classList.add('hidden');
 }
 
-// ---- personagem ----nlet character = null;
+// ---- personagem ----
+let character = null;
 async function loadCharacter() {
   character = await api('/api/character', { headers: headers() });
   $('charName').textContent = character.name || '';
@@ -491,7 +493,8 @@ async function sendChat() {
 $('sendBtn').onclick = sendChat;
 $('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 
-// ---- gravacao de audio ----nlet mediaRec = null, chunks = [];
+// ---- gravacao de audio ----
+let mediaRec = null, chunks = [];
 $('micBtn').onclick = async () => {
   const btn = $('micBtn');
   if (mediaRec && mediaRec.state === 'recording') { mediaRec.stop(); return; }
@@ -575,7 +578,8 @@ $('sceneGen').onclick = async () => {
   } catch (e) { b.innerHTML += '<div class="status"><span class="badge err">Erro</span> ' + e.message + '</div>'; }
 };
 
-// ---- Galeria ----nasync function loadGallery() {
+// ---- Galeria ----
+async function loadGallery() {
   const grid = $('galleryGrid');
   grid.innerHTML = '';
   const items = await api('/api/gallery', { headers: headers() });
