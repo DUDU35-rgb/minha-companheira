@@ -356,8 +356,7 @@ document.querySelectorAll('.tabbar button').forEach((b) => {
   } else banner.classList.add('hidden');
 }
 
-// ---- personagem ----
-let character = null;
+// ---- personagem ----nlet character = null;
 async function loadCharacter() {
   character = await api('/api/character', { headers: headers() });
   $('charName').textContent = character.name || '';
@@ -476,10 +475,20 @@ async function sendChat() {
       method: 'POST', headers: headers(),
       body: JSON.stringify({ text, mode }),
     });
-    thinking.textContent = res.reply.text;
-    if (res.reply.audio_path) addAudio(thinking, res.reply.audio_path);
-    if (res.reply.video_id) trackJob(res.reply.video_id, thinking);
-    if (res.reply.text) falarResposta(res.reply.text);
+    // Atualiza o texto do balão de forma segura (preserva anexos/status)
+    if (res.reply && res.reply.text) {
+      // remove apenas nós de texto existentes
+      Array.from(thinking.childNodes).forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) node.remove();
+      });
+      thinking.insertBefore(document.createTextNode(res.reply.text), thinking.firstChild);
+    }
+    if (res.reply && res.reply.audio_path) addAudio(thinking, res.reply.audio_path);
+    if (res.reply && res.reply.video_id) trackJob(res.reply.video_id, thinking);
+    // tocar TTS apenas quando o modo for 'audio'
+    if (mode === 'audio' && res.reply && res.reply.text) {
+      falarResposta(res.reply.text);
+    }
   } catch (e) {
     thinking.innerHTML = '<span class="badge err">Erro</span> ' + e.message;
   }
